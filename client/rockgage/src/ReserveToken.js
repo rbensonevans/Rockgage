@@ -2,93 +2,66 @@ import { useState, useEffect } from 'react'
 import { ethers } from "ethers"
 import { Row, Col, Card } from 'react-bootstrap'
 
-function renderSoldItems(items) {
-  return (
-    <>
-      <h2>Sold</h2>
-      <Row xs={1} md={2} lg={4} className="g-4 py-3">
-        {items.map((item, idx) => (
-          <Col key={idx} className="overflow-hidden">
-            <Card>
-              <Card.Img variant="top" src={item.image} />
-              <Card.Footer>
-                For {ethers.utils.formatEther(item.totalPrice)} ETH - Recieved {ethers.utils.formatEther(item.price)} ETH
-              </Card.Footer>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-    </>
-  )
-}
+export default function ReserveToken ({ rockgageToken, rockgageWallet, exchangeRate, account }) {
 
-export default function ReserveToken({ marketplace, nft, account }) {
   const [loading, setLoading] = useState(true)
-  const [listedItems, setListedItems] = useState([])
-  const [soldItems, setSoldItems] = useState([])
-  const loadListedItems = async () => {
-    // Load all sold items that the user listed
-    const itemCount = await marketplace.itemCount()
-    let listedItems = []
-    let soldItems = []
-    for (let indx = 1; indx <= itemCount; indx++) {
-      const i = await marketplace.items(indx)
-      if (i.seller.toLowerCase() === account) {
-        // get uri url from nft contract
-        const uri = await nft.tokenURI(i.tokenId)
-        // use uri to fetch the nft metadata stored on ipfs 
-        const response = await fetch(uri)
-        const metadata = await response.json()
-        // get total price of item (item price + fee)
-        const totalPrice = await marketplace.getTotalPrice(i.itemId)
-        // define listed item object
-        let item = {
-          totalPrice,
-          price: i.price,
-          itemId: i.itemId,
-          name: metadata.name,
-          description: metadata.description,
-          image: metadata.image
-        }
-        listedItems.push(item)
-        // Add listed item to sold items array if sold
-        if (i.sold) soldItems.push(item)
-      }
-    }
-    setLoading(false)
-    setListedItems(listedItems)
-    setSoldItems(soldItems)
+
+  const [tokenName, setTokenName] = useState("")
+  const [tokenSymbol, setTokenSymbol] = useState("")
+  const [tokenTotalSupply, setTokenTotalSupply] = useState(0)
+  const [balanceOf, setBalanceOf] = useState(0)
+  const [getDisplayName, setGetDisplayName] = useState(0)
+  const [balanceROCK, setBalanceROCK] = useState(0)
+  const [systemMetricsIssuedAmountROCK, setSystemMetricsIssuedAmountROCK] = useState(0)
+
+  const loadAccountInfo = async () => {
+  
+      // Future: display an nft or image for the Reserve token.
+
+      const tokenName = await rockgageToken.name()
+      const tokenSymbol = await rockgageToken.symbol()
+      const tokenTotalSupply = await rockgageToken.totalSupply()
+      const balanceOf = await rockgageToken.balanceOf(account)
+      const getDisplayName = await exchangeRate.getDisplayName("ROCK-USD")
+      const systemMetricsIssuedAmountROCK = await rockgageWallet.systemMetricsIssuedAmountROCK()
+      setTokenName(tokenName)      
+      setTokenSymbol(tokenSymbol)
+      setTokenTotalSupply(tokenTotalSupply)
+      setSystemMetricsIssuedAmountROCK(systemMetricsIssuedAmountROCK)
+      setBalanceOf(balanceOf)
+      setGetDisplayName(getDisplayName)
+      console.log("DisplayName is:" + getDisplayName)
+      setLoading(false)
   }
+
   useEffect(() => {
-    loadListedItems()
+    loadAccountInfo()
   }, [])
+
   if (loading) return (
     <main style={{ padding: "1rem 0" }}>
       <h2>Loading...</h2>
     </main>
   )
+
   return (
-    <div className="flex justify-center">
-      {listedItems.length > 0 ?
-        <div className="px-5 py-3 container">
-            <h2>Listed</h2>
-          <Row xs={1} md={2} lg={4} className="g-4 py-3">
-            {listedItems.map((item, idx) => (
-              <Col key={idx} className="overflow-hidden">
-                <Card>
-                  <Card.Img variant="top" src={item.image} />
-                  <Card.Footer>{ethers.utils.formatEther(item.totalPrice)} ETH</Card.Footer>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-            {soldItems.length > 0 && renderSoldItems(soldItems)}
+      <div className="flex justify-center">
+        <div className="px-5 container">
+        <br/><br/>
+          <h2>$ROCK</h2>   
+          <br/>    
+          <h6>A Mortgage-Backed Stablecoin</h6>       
+          <br/><br/>
+          <a href="#">Exchange</a>      
+          <br/><br/>
+          <p>Token Name:&nbsp;{tokenName}</p>
+          <p>Token Symbol:&nbsp;{tokenSymbol}</p>
+          <p>Token Total Supply:&nbsp;${ethers.utils.formatEther(tokenTotalSupply)}&nbsp;{tokenSymbol}</p>
+          <p>Token Balance:&nbsp;${ethers.utils.formatEther(systemMetricsIssuedAmountROCK)}&nbsp;{tokenSymbol}</p>
+          <p>Exchange Rate:&nbsp;{getDisplayName}</p>
+
+{/*          <p>Exchange Rate:&nbsp;1&nbsp;{tokenSymbol}&nbsp;/&nbsp;1&nbsp;USD</p> */}
         </div>
-        : (
-          <main style={{ padding: "1rem 0" }}>
-            <h2>No listed assets</h2>
-          </main>
-        )}
     </div>
   );
 }

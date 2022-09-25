@@ -18,9 +18,7 @@ const sleep = ms => new Promise(
 
 const getNFTDetails=() => {
 
- // let url = 'https://api.nftport.xyz/v0/nfts/0x2d22add30b7922a81e7256f3435fed9890277c4a/' + "928455260396703010431";
- let url = 'https://api.nftport.xyz/v0/nfts/0x2d22add30b7922a81e7256f3435fed9890277c4a/' + "689758058356184389062"; 
- 
+  let url = 'https://api.nftport.xyz/v0/nfts/0x2d22add30b7922a81e7256f3435fed9890277c4a/' + "928455260396703010431"; 
   console.log(url)
 
   const options = {
@@ -82,6 +80,8 @@ const getMetaData = () => {
 
   axios.request(options).then(function (response) {
     console.log("In getMetaData: after axios.request")
+
+
       /*
     console.log(response.data.total)
     console.log(response.data.minted_nfts[0].token_id)
@@ -113,10 +113,31 @@ const loadMarketplaceItems = async() => {
   sleep(1000);
 
   //console.log("number of items:" + items.length)
+}
+
+
+  const loadSKALENFTs = async() => {
+    const tokenCount = await nft.tokenCount()
+    console.log("number of NFTs:" + tokenCount)
+
+    for (let i = tokenCount; i > 0; i--) {
+      const token = await nft.tokenURI(i)
+      console.log("NFT: " + i + " " + token)
+    }
   }
 
   useEffect(() => {
-        loadMarketplaceItems() // via NFTPort
+ //   async function fetchData() {
+ //     console.log('start');
+        // loadMarketplaceItems() // via NFTPort
+        loadSKALENFTs()
+      //await sleep(1000);
+      //setLoading(false)
+
+  //    console.log('end');
+  //  }
+
+    //fetchData();
   })
 
   if (loading) return (
@@ -130,7 +151,7 @@ const loadMarketplaceItems = async() => {
       {items.length > 0 ?
         <div className="px-5 container">
           <br/><br/>
-          <h2>My Properties (via NFTPort/Polygon)</h2>
+          <h2>My Properties</h2>
           <Row xs={1} md={2} lg={4} className="g-4 py-5">
             {items.map((item, idx) => (
               <Col key={idx} className="overflow-hidden">
