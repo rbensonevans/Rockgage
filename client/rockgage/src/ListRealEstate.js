@@ -16,11 +16,11 @@ const sleep = ms => new Promise(
 );
 
 
-const getNFTDetails=() => {
+const getNFTDetails=(indx) => {
 
- // let url = 'https://api.nftport.xyz/v0/nfts/0x2d22add30b7922a81e7256f3435fed9890277c4a/' + "928455260396703010431";
- let url = 'https://api.nftport.xyz/v0/nfts/0x2d22add30b7922a81e7256f3435fed9890277c4a/' + "689758058356184389062"; 
- 
+  let api_base = "https://api.nftport.xyz/v0/nfts/";
+  let api_url =  api_base + metadata[indx].contract_address;
+  let url = api_url + "/" + metadata[indx].token_id;
   console.log(url)
 
   const options = {
@@ -88,14 +88,28 @@ const getMetaData = () => {
     console.log(response.data.minted_nfts[0].contract_name)
     console.log(response.data.minted_nfts[0].metadata_uri)
       */
-    console.log(response.data)
+    let realCount = 0;
+    let itemCount = response.data.total
+    for (let indx = 1; indx <= itemCount; indx++) {
+     if (typeof response === "undefined") continue;      
+     if (typeof response.data === "undefined") continue;
+     if (typeof response.data.minted_nfts[indx] === "undefined") continue;
+     if (typeof response.data.minted_nfts[indx].metadata_uri === "undefined") continue;
+     if (typeof response.data.minted_nfts[indx].contract_address === "undefined") continue;
+     if (typeof response.data.minted_nfts[indx].token_id === "undefined") continue;
 
-   metadata.push({
-      metadata_uri: response.data.minted_nfts[0].metadata_uri,
-      token_id: response.data.minted_nfts[0].token_id
-    })
+      metadata.push({
+            metadata_uri: response.data.minted_nfts[indx].metadata_uri,
+            token_id: response.data.minted_nfts[indx].token_id,
+            contract_address: response.data.minted_nfts[indx].contract_address
+          })
+      realCount++;
+    }
     setMetadata(metadata)
-    getNFTDetails()
+    for (let indx = 1; indx <= realCount; indx++) {
+        getNFTDetails(indx)
+        sleep(1000000000); // don't overload the server.
+    }
   }).catch(function (error) {
     console.error(error);
   });
